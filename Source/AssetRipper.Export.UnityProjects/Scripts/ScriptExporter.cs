@@ -58,7 +58,7 @@ namespace AssetRipper.Export.UnityProjects.Scripts
 
 		public AssemblyExportType GetExportType(IMonoScript script)
 		{
-			return GetExportType(script.GetAssemblyNameFixed());
+			return GetExportType(script.GetAssemblyNameFixed(), script.AssetInfo.Collection.Version);
 		}
 
 		public MetaPtr CreateExportPointer(IMonoScript script)
@@ -66,13 +66,21 @@ namespace AssetRipper.Export.UnityProjects.Scripts
 			return GetExportType(script) switch
 			{
 				AssemblyExportType.Decompile => new(MonoScriptDecompiledFileID, ScriptHashing.CalculateScriptGuid(script), AssetType.Meta),
-				AssemblyExportType.Skip => new(ScriptHashing.CalculateScriptFileID(script), UnityEngineGUID, AssetType.Meta),
+				AssemblyExportType.Skip => 
+					new(ScriptHashing.CalculateScriptFileID(script), UnityEngineGUID, AssetType.Meta),
+				AssemblyExportType.SkipBuiltInExtensions => new(
+					ScriptHashing.CalculateScriptFileID(script), ReferenceAssemblies.GetUnityExtensionAssemblyGuid(script.AssemblyName), AssetType.Meta
+				),
 				_ => new(ScriptHashing.CalculateScriptFileID(script), ScriptHashing.CalculateAssemblyGuid(script), AssetType.Meta),
 			};
 		}
 
-		public AssemblyExportType GetExportType(string assemblyName)
+		public AssemblyExportType GetExportType(string assemblyName, UnityVersion version)
 		{
+			if (ReferenceAssemblies.IsUnityExtensionAssembly(assemblyName, version))
+			{
+				return AssemblyExportType.SkipBuiltInExtensions;
+			}
 			if (ReferenceAssemblies.IsReferenceAssembly(assemblyName))
 			{
 				return AssemblyExportType.Skip;

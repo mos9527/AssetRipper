@@ -14,5 +14,8 @@
 		/// The assembly is a framework assembly and should be skipped.
 		/// </summary>
 		Skip,
+		/// <summary>
+		/// The assembly is from UnityExtensions and should be skipped.
+		SkipBuiltInExtensions
 	}
 }
