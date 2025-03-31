@@ -63,7 +63,7 @@ public sealed class ScriptExportCollection : ScriptExportCollectionBase
 		foreach (AssemblyDefinition assembly in AssetExporter.AssemblyManager.GetAssemblies())
 		{
 			string assemblyName = assembly.Name!;
-			AssemblyExportType exportType = AssetExporter.GetExportType(assemblyName);
+			AssemblyExportType exportType = AssetExporter.GetExportType(assemblyName, container.File.Version);
 
 			if (exportType is AssemblyExportType.Decompile)
 			{
@@ -81,6 +81,9 @@ public sealed class ScriptExportCollection : ScriptExportCollectionBase
 				string outputPath = fileSystem.Path.Join(pluginsFolder, SpecialFileNames.AddAssemblyFileExtension(assemblyName));
 				AssetExporter.AssemblyManager.SaveAssembly(assembly, outputPath);
 				OnAssemblyExported(container, outputPath, fileSystem);
+			} else if (exportType is AssemblyExportType.SkipBuiltInExtensions)
+			{
+				Logger.Info(LogCategory.Export, $"Skipping built-in extensions {assemblyName} ({container.File.Version})");
 			}
 		}
 

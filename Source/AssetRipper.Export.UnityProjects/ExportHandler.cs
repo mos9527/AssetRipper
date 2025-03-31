@@ -57,11 +57,23 @@ public class ExportHandler
 
 	protected virtual IEnumerable<IAssetProcessor> GetProcessors()
 	{
+		// Assembly processors
+		yield return new AttributePolyfillGenerator();
 		yield return new MonoExplicitPropertyRepairProcessor();
+		yield return new ObfuscationRepairProcessor();
+		yield return new ForwardingAssemblyGenerator();
 		if (Settings.ImportSettings.ScriptContentLevel == ScriptContentLevel.Level1)
 		{
 			yield return new MethodStubbingProcessor();
 		}
+		yield return new NullRefReturnProcessor(Settings.ImportSettings.ScriptContentLevel);
+		yield return new UnmanagedConstraintRecoveryProcessor();
+		if (Settings.ProcessingSettings.RemoveNullableAttributes)
+		{
+			yield return new NullableRemovalProcessor();
+		}
+		yield return new RemoveAssemblyKeyFileAttributeProcessor();
+
 		yield return new SceneDefinitionProcessor();
 		yield return new MainAssetProcessor();
 		yield return new AnimatorControllerProcessor();
