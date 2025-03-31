@@ -14,7 +14,7 @@ namespace AssetRipper.Import.Structure.Assembly.Managers
 		public virtual ScriptingBackend ScriptingBackend => ScriptingBackend.Unknown;
 
 		protected readonly Dictionary<string, AssemblyDefinition?> m_assemblies = new();
-		protected readonly Dictionary<AssemblyDefinition, Stream> m_assemblyStreams = new();
+		protected readonly Dictionary<AssemblyDefinition, Stream> m_assemblyStreams = new(SignatureComparer.Default);
 		protected readonly Dictionary<string, bool> m_validTypes = new();
 		private readonly Dictionary<ITypeDefOrRef, MonoType> monoTypeCache = new(SignatureComparer.Default);
 
@@ -48,13 +48,21 @@ namespace AssetRipper.Import.Structure.Assembly.Managers
 			{
 				throw new BadImageFormatException($"Could not read {filePath}", badImageFormatException);
 			}
-			assembly.InitializeResolvers(this);
+
 			string fileName = Path.GetFileNameWithoutExtension(filePath);
-			string assemblyName = ToAssemblyName(assembly);
 			m_assemblies.Add(fileName, assembly);
-			m_assemblies[assemblyName] = assembly;
+
 			FileStream stream = File.OpenRead(filePath);
 			m_assemblyStreams.Add(assembly, stream);
+
+			Add(assembly);
+		}
+
+		public void Add(AssemblyDefinition assembly)
+		{
+			assembly.InitializeResolvers(this);
+			string assemblyName = ToAssemblyName(assembly);
+			m_assemblies[assemblyName] = assembly;
 		}
 
 		public Stream GetStreamForAssembly(AssemblyDefinition assembly)
